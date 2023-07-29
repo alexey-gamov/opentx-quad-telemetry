@@ -237,7 +237,7 @@ end
 
 -- Transmitter output power and frequency
 local function drawOutput(x, y)
-	local grid = {{'4', '50', '150'}, {'4', '25', '50', '100', '150', '200', '250', '500'}}
+	local grid = {{'4', '50', '150'}, {'0', '25', '50', '100', '100F', '150', '200', '250', '333F', '500', 'D250', 'D500', 'F500', 'F1000', 'D50'}}
 
 	-- Prepare final values for display
 	local pwr = tostring(getValue('TPWR'))
