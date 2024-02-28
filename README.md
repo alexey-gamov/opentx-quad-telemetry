@@ -1,8 +1,8 @@
-# OpenTX Quad telemetry dashboard
+# Quad telemetry dashboard
 
-Advanced lua-based dashboard for the OpenTX Monochrome LCD Transmitters
+Advanced lua-based dashboard for the OpenTX (EdgeTX) Monochrome LCD Transmitters
 
-![opentx-quad-telemetry](https://i.postimg.cc/Jz1CdwTG/opentx-quad-telemetry.gif)
+![opentx-quad-telemetry](https://i.postimg.cc/xdqg2PQd/opentx-quad-telemetry.gif)
 
 ## Features
 

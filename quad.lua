@@ -134,6 +134,19 @@ local function drawModeTitle(x, y)
 	lcd.drawText(x - #modeText * 2.5, y, modeText, SMLSIZE)
 end
 
+-- Show current altitude (if telemetry source exists)
+local function drawAltitude(x, y)
+	local count = string.len(math.floor(altitude))
+	local units = count < 4 and "m" or "km"
+	local alt = count < 4 and altitude or altitude / 1000
+
+	-- Format resulting string and show on display
+	alt = string.format("%." .. (alt < 10 and 2 or 1) .. "f", alt)
+
+	lcd.drawText(x - #alt * 2.5 - #units * 2.5, y, alt, SMLSIZE)
+	lcd.drawText(x + #alt * 2.5 - #units * 2.5 - 2, y, units, SMLSIZE)
+end
+
 -- Animated Quadcopter propellor (zero coords for top left)
 local function drawPropellor(x, y, invert)
 	if (not isArmed and not invert) or (isArmed and animation == (invert and 2 or 0)) then
@@ -332,6 +345,9 @@ local function gatherInput(event)
 	-- Current fly mode source
 	mode = getValue(crsf and 'FM' or settings.mode.switch)
 
+	-- Check if altitude telemetry exists and get its value
+	altitude = getFieldInfo('Alt') and getValue('Alt') or false
+
 	-- Check if GPS telemetry exists and get position
 	gps = getFieldInfo('GPS') and getValue('GPS') or false
 
@@ -404,8 +420,9 @@ local function run(event)
 	-- Draw voltage battery graphic in left side
 	drawVoltageImage(3, 8, screen.w / 10, screen.h - 8)
 
-	-- Draw fly mode centered above sexy quad
-	drawModeTitle(screen.w / 2, screen.h / 4 - 7)
+	-- Draw fly mode name or attitude value above sexy quad
+	drawData = (altitude and screen.alt) and drawAltitude or drawModeTitle
+	drawData(screen.w / 2, screen.h / 4 - 7)
 
 	-- Draw sexy quadcopter animated in center
 	drawQuadcopter(screen.w / 2 - 17,  screen.h / 2 - 14)
