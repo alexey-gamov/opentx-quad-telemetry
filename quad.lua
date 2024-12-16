@@ -192,6 +192,9 @@ local function drawQuadcopter(x, y)
 
 	-- ARMED text
 	lcd.drawText(x + 3, y + 12, isArmed and 'ARMED' or '', SMLSIZE + BLINK)
+
+	-- LOST text
+	lcd.drawText(x + 6, y + 12, (pos.lost and link == 0) and 'LOST' or '', SMLSIZE + INVERS)
 end
 
 -- Current quad battery volatage at the bottom
@@ -250,11 +253,23 @@ end
 
 -- Transmitter output power and frequency
 local function drawOutput(x, y)
-	local grid = {{'4', '50', '150'}, {'4', '25', '50', '100', '150', '200', '250', '500'}}
+	local grid = {
+		{'0', '10', '50'},
+		{'0', '20', '50', '100', '150', '200', '250', '500', '1000'},
+		{'0', '30', '50', '100', 'R100', '150', '200', '250', 'R333', '500', 'D250', 'D500', 'F500', 'F1000', 'D50'}
+	}
+
+	local icons = {
+		R = {35, 2, 35, 4, 35, 6, 35, 7,36, 2, 35, 2, 36, 7, 38, 7, 40, 2, 38, 2, 40, 7, 41, 7, 41, 3, 41, 2, 41, 6, 41, 5},
+		D = {35, 6, 37, 6, 36, 5, 36, 7, 37, 3, 39, 3, 38, 2, 38, 4, 39, 6, 41, 6, 40, 5, 40, 7},
+		S = {35, 6, 35, 7, 37, 5, 37, 7, 39, 4, 39, 7, 41, 3, 41, 7},
+		F = {36, 7, 40, 3, 38, 2, 41, 2, 41, 2, 41, 5}
+	}
 
 	-- Prepare final values for display
 	local pwr = tostring(getValue('TPWR'))
-	local fmd = grid[elrs and 2 or 1][getValue('RFMD') + 1]
+	local fmd = grid[elrs and elrs or 1][getValue('RFMD') + 1]
+	local alt, fmd = string.match(fmd, "(%D?)(%d+)")
 
 	-- Draw main border
 	lcd.drawRectangle(x, y, 44, 10)
@@ -269,14 +284,15 @@ local function drawOutput(x, y)
 	lcd.drawText(x + 13 - #pwr * 2.5, y + 11, pwr, SMLSIZE)
 	lcd.drawText(x + 34 - #fmd * 3, y + 11, fmd, SMLSIZE)
 
-	-- Draw icon
-	lcd.drawLine(x + 35, y + 6, x + 35, y + 7, SOLID, FORCE)
-	lcd.drawLine(x + 37, y + 5, x + 37, y + 7, SOLID, FORCE)
-	lcd.drawLine(x + 39, y + 4, x + 39, y + 7, SOLID, FORCE)
-	lcd.drawLine(x + 41, y + 3, x + 41, y + 7, SOLID, FORCE)
-
 	-- Small touch to fix overlaping 'hz'
 	lcd.drawPoint(x + 28, y + 17, SOLID, FORCE)
+
+	-- Draw icon according to channel features
+	local pixels = icons[alt] or icons['S']
+
+	for i = 1, #pixels, 4 do
+        lcd.drawLine(x + pixels[i], y + pixels[i + 1], x + pixels[i + 2], y + pixels[i + 3], SOLID, FORCE)
+    end
 end
 
 -- Flight timer counts from black to white
@@ -356,14 +372,14 @@ local function gatherInput(event)
 
 	-- Differentiate what exact long-range module is used
 	if crsf and elrs == nil then
-		local shift, command, data = 3, crossfireTelemetryPop()
+		local off, command, data = 3, crossfireTelemetryPop()
 
 		if command == 0x29 and data[2] == 0xEE then
-			while data[shift] ~= 0 do
-				shift = shift + 1
+			while data[off] ~= 0 do
+				off = off + 1
 			end
 
-			elrs = (data[shift + 1] == 0x45 and data[shift + 2] == 0x4c and data[shift + 3] == 0x52 and data[shift + 4] == 0x53)
+			elrs = string.char(data[off + 1], data[off + 2], data[off + 3], data[off + 4]) == "ELRS" and (data[off + 10] > 0 and 3 or 2)
 		elseif math.ceil(tick) == 1 then
 			crossfireTelemetryPush(0x28, {0x00, 0xEA})
 		end
@@ -420,7 +436,7 @@ local function run(event)
 	-- Draw voltage battery graphic in left side
 	drawVoltageImage(3, 8, screen.w / 10, screen.h - 8)
 
-	-- Draw fly mode name or attitude value above sexy quad
+	-- Draw fly mode name or attitude above sexy quad
 	drawData = (altitude and screen.alt) and drawAltitude or drawModeTitle
 	drawData(screen.w / 2, screen.h / 4 - 7)
 

@@ -2,7 +2,7 @@
 
 Advanced lua-based dashboard for the OpenTX (EdgeTX) Monochrome LCD Transmitters
 
-![opentx-quad-telemetry](https://i.postimg.cc/xdqg2PQd/opentx-quad-telemetry.gif)
+![opentx-quad-telemetry](https://i.postimg.cc/vZGKJ7rC/opentx-quad-telemetry.gif)
 
 ## Features
 
